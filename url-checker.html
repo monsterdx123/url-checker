@@ -14,6 +14,7 @@
       flex-direction: column;
     }
 
+    /* ── Header ── */
     header {
       background: #1a1a2e;
       color: #fff;
@@ -24,17 +25,46 @@
       align-items: center;
       gap: 10px;
     }
+    header .dot { color: #7c83fd; }
+    header .spacer { flex: 1; }
 
-    header span { color: #7c83fd; }
+    #btnSettings {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.25);
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .15s;
+      flex: unset;
+    }
+    #btnSettings:hover { background: rgba(255,255,255,.1); opacity: 1; }
 
+    /* indicator dot on settings button */
+    #btnSettings .dot-indicator {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #f87171;
+      display: none;
+    }
+    #btnSettings.configured .dot-indicator {
+      background: #4ade80;
+      display: inline-block;
+    }
+
+    /* ── Layout ── */
     .main {
       display: flex;
       flex: 1;
-      gap: 0;
       overflow: hidden;
     }
 
-    /* 左侧面板 */
+    /* ── Left panel ── */
     .left {
       width: 380px;
       min-width: 280px;
@@ -46,7 +76,7 @@
       gap: 14px;
     }
 
-    .left label {
+    .left > label {
       font-size: 13px;
       font-weight: 600;
       color: #555;
@@ -67,14 +97,12 @@
       outline: none;
       transition: border-color .2s;
     }
-
     .left textarea:focus { border-color: #7c83fd; }
 
-    .hint {
-      font-size: 12px;
-      color: #999;
-      line-height: 1.5;
-    }
+    .hint { font-size: 12px; color: #999; line-height: 1.5; }
+
+    .progress { height: 3px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
+    .progress-bar { height: 100%; background: #7c83fd; transition: width .3s; }
 
     .btn-group { display: flex; gap: 8px; }
 
@@ -90,17 +118,15 @@
     }
     button:hover { opacity: .85; }
 
-    #btnCheck {
-      background: #7c83fd;
+    #btnCheck  { background: #7c83fd; color: #fff; }
+    #btnClear  { background: #f3f4f6; color: #555; }
+    #btnTelegram {
+      background: #229ED9;
       color: #fff;
+      display: none;
     }
 
-    #btnClear {
-      background: #f3f4f6;
-      color: #555;
-    }
-
-    /* 右侧面板 */
+    /* ── Right panel ── */
     .right {
       flex: 1;
       overflow-y: auto;
@@ -110,11 +136,7 @@
       gap: 12px;
     }
 
-    .empty {
-      margin: auto;
-      text-align: center;
-      color: #bbb;
-    }
+    .empty { margin: auto; text-align: center; color: #bbb; }
     .empty .icon { font-size: 48px; margin-bottom: 12px; }
     .empty p { font-size: 14px; }
 
@@ -128,9 +150,8 @@
       color: #555;
       border: 1px solid #e5e7eb;
     }
-
     .summary-bar b { font-size: 20px; font-weight: 700; }
-    .s-ok { color: #16a34a; }
+    .s-ok   { color: #16a34a; }
     .s-fail { color: #dc2626; }
     .s-warn { color: #d97706; }
 
@@ -146,10 +167,9 @@
       border: 1px solid #e5e7eb;
       animation: fadeIn .2s ease;
     }
-
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
 
-    .card .badge {
+    .badge {
       min-width: 80px;
       text-align: center;
       padding: 4px 10px;
@@ -157,98 +177,119 @@
       font-size: 12px;
       font-weight: 700;
     }
-
-    .badge.ok    { background: #dcfce7; color: #16a34a; }
-    .badge.fail  { background: #fee2e2; color: #dc2626; }
-    .badge.cors  { background: #fef3c7; color: #d97706; }
+    .badge.ok      { background: #dcfce7; color: #16a34a; }
+    .badge.fail    { background: #fee2e2; color: #dc2626; }
+    .badge.cors    { background: #fef3c7; color: #d97706; }
     .badge.pending { background: #f3f4f6; color: #999; }
 
-    .card .url {
-      flex: 1;
-      font-size: 13px;
-      font-family: "SF Mono", "Fira Code", monospace;
-      color: #333;
-      word-break: break-all;
-    }
+    .card .url  { flex: 1; font-size: 13px; font-family: "SF Mono","Fira Code",monospace; color: #333; word-break: break-all; }
+    .card .info { font-size: 12px; color: #888; white-space: nowrap; }
 
-    .card .info {
-      font-size: 12px;
-      color: #888;
-      white-space: nowrap;
+    /* ── Settings Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
     }
+    .modal-backdrop.open { display: flex; }
 
-    .progress {
-      height: 3px;
-      background: #e5e7eb;
-      border-radius: 2px;
+    .modal {
+      background: #fff;
+      border-radius: 14px;
+      width: 420px;
+      max-width: 95vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
       overflow: hidden;
+      animation: modalIn .2s ease;
     }
-    .progress-bar {
-      height: 100%;
-      background: #7c83fd;
-      transition: width .3s;
-    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
 
-    /* Telegram 设置区 */
-    .tg-section {
-      border-top: 1px solid #f0f0f0;
-      padding-top: 12px;
-    }
-
-    .tg-toggle {
+    .modal-header {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid #f0f0f0;
       display: flex;
       align-items: center;
       justify-content: space-between;
+    }
+    .modal-header h2 { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+    .modal-close {
+      background: #f3f4f6;
+      border: none;
+      border-radius: 6px;
+      width: 28px; height: 28px;
       cursor: pointer;
-      user-select: none;
+      font-size: 16px;
+      color: #666;
+      display: flex; align-items: center; justify-content: center;
+      flex: unset;
+      padding: 0;
     }
+    .modal-close:hover { background: #e5e7eb; opacity: 1; }
 
-    .tg-toggle label {
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+    .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
 
-    .tg-toggle .arrow {
-      font-size: 10px;
-      color: #aaa;
-      transition: transform .2s;
-    }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field-label { font-size: 12px; font-weight: 600; color: #555; }
+    .field-sub   { font-size: 11px; color: #aaa; margin-top: 2px; }
 
-    .tg-body { display: none; flex-direction: column; gap: 8px; margin-top: 10px; }
-    .tg-body.open { display: flex; }
-
-    .tg-body input {
+    .field input {
       width: 100%;
       border: 1px solid #d1d5db;
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 12px;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 13px;
       font-family: "SF Mono", "Fira Code", monospace;
       outline: none;
       transition: border-color .2s;
+      color: #222;
+    }
+    .field input:focus { border-color: #7c83fd; }
+
+    .modal-footer {
+      padding: 14px 22px 18px;
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid #f0f0f0;
     }
 
-    .tg-body input:focus { border-color: #7c83fd; }
-
-    .tg-body .field-label {
-      font-size: 11px;
-      color: #888;
-      margin-bottom: 3px;
+    #btnTest {
+      background: #f3f4f6;
+      color: #555;
+      font-size: 13px;
+      padding: 9px 16px;
+      flex: unset;
     }
-
-    #btnTelegram {
-      background: #229ED9;
+    #btnSave {
+      flex: 1;
+      background: #7c83fd;
       color: #fff;
+      font-size: 13px;
+      padding: 9px;
+    }
+
+    .modal-msg {
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
       display: none;
     }
+    .modal-msg.ok   { background: #dcfce7; color: #16a34a; display: block; }
+    .modal-msg.err  { background: #fee2e2; color: #dc2626; display: block; }
   </style>
 </head>
 <body>
 
 <header>
-  <span>&#9679;</span> URL 可访问性批量检测
+  <span class="dot">&#9679;</span> URL 可访问性批量检测
+  <div class="spacer"></div>
+  <button id="btnSettings" onclick="openSettings()">
+    <span class="dot-indicator"></span>
+    &#9881; Telegram 设置
+  </button>
 </header>
 
 <div class="main">
@@ -269,42 +310,128 @@ https://github.com
       <button id="btnClear" onclick="clearAll()">&#10005; 清空</button>
     </div>
     <button id="btnTelegram" onclick="sendToTelegram()">&#9992; 发送到 Telegram</button>
-
-    <!-- Telegram 设置 -->
-    <div class="tg-section">
-      <div class="tg-toggle" onclick="toggleTg()">
-        <label>&#128337; Telegram 设置</label>
-        <span class="arrow" id="tgArrow">&#9660;</span>
-      </div>
-      <div class="tg-body" id="tgBody">
-        <div>
-          <div class="field-label">Bot Token</div>
-          <input id="tgToken" type="password" placeholder="123456:ABCdef..." oninput="saveTgConfig()" autocomplete="off">
-        </div>
-        <div>
-          <div class="field-label">Chat ID（群组为负数）</div>
-          <input id="tgChatId" type="text" placeholder="-1001234567890" oninput="saveTgConfig()">
-        </div>
-        <p class="hint">Token 保存在本地浏览器，不会上传到任何服务器。</p>
-      </div>
-    </div>
   </div>
 
   <!-- 右侧 -->
   <div class="right" id="right">
-    <div class="empty" id="emptyState">
+    <div class="empty">
       <div class="icon">&#128269;</div>
       <p>在左侧贴入 URL，点击「开始检测」</p>
     </div>
   </div>
 </div>
 
+<!-- Settings Modal -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="backdropClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>&#9881; Telegram 设置</h2>
+      <button class="modal-close" onclick="closeSettings()">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <div class="field-label">Bot Token</div>
+        <input id="tgToken" type="password" placeholder="123456789:ABCdefGHIjkl..." autocomplete="off">
+        <div class="field-sub">从 @BotFather 获取</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Chat ID</div>
+        <input id="tgChatId" type="text" placeholder="-1001234567890">
+        <div class="field-sub">群组 ID 为负数。不知道？把 bot 加入群后发一条消息，再问 @userinfobot</div>
+      </div>
+      <div class="modal-msg" id="modalMsg"></div>
+    </div>
+    <div class="modal-footer">
+      <button id="btnTest" onclick="testTelegram()">&#128161; 测试连接</button>
+      <button id="btnSave" onclick="saveSettings()">&#10003; 保存</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  let controller = null;
   let lastResults = [];
 
-  window.addEventListener('DOMContentLoaded', loadTgConfig);
+  // ── Init ───────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    const token  = localStorage.getItem('tg_token')   || '';
+    const chatId = localStorage.getItem('tg_chat_id') || '';
+    document.getElementById('tgToken').value  = token;
+    document.getElementById('tgChatId').value = chatId;
+    updateSettingsIndicator();
+  });
 
+  function updateSettingsIndicator() {
+    const configured = !!(localStorage.getItem('tg_token') && localStorage.getItem('tg_chat_id'));
+    document.getElementById('btnSettings').classList.toggle('configured', configured);
+  }
+
+  // ── Settings Modal ─────────────────────────────────────
+  function openSettings() {
+    document.getElementById('tgToken').value  = localStorage.getItem('tg_token')   || '';
+    document.getElementById('tgChatId').value = localStorage.getItem('tg_chat_id') || '';
+    setModalMsg('', '');
+    document.getElementById('modalBackdrop').classList.add('open');
+  }
+
+  function closeSettings() {
+    document.getElementById('modalBackdrop').classList.remove('open');
+  }
+
+  function backdropClick(e) {
+    if (e.target === document.getElementById('modalBackdrop')) closeSettings();
+  }
+
+  function saveSettings() {
+    const token  = document.getElementById('tgToken').value.trim();
+    const chatId = document.getElementById('tgChatId').value.trim();
+    if (!token || !chatId) {
+      setModalMsg('err', '请填写 Token 和 Chat ID');
+      return;
+    }
+    localStorage.setItem('tg_token',   token);
+    localStorage.setItem('tg_chat_id', chatId);
+    updateSettingsIndicator();
+    setModalMsg('ok', '已保存');
+    setTimeout(closeSettings, 800);
+  }
+
+  async function testTelegram() {
+    const token  = document.getElementById('tgToken').value.trim();
+    const chatId = document.getElementById('tgChatId').value.trim();
+    if (!token || !chatId) { setModalMsg('err', '请先填写 Token 和 Chat ID'); return; }
+
+    const btn = document.getElementById('btnTest');
+    btn.textContent = '测试中…';
+    btn.disabled = true;
+    setModalMsg('', '');
+
+    try {
+      const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: '✅ URL 检测工具连接测试成功！' }),
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        setModalMsg('ok', '测试成功，消息已发送到群组');
+      } else {
+        setModalMsg('err', '失败：' + (data.description || JSON.stringify(data)));
+      }
+    } catch (e) {
+      setModalMsg('err', '网络错误：' + e.message);
+    } finally {
+      btn.textContent = '&#128161; 测试连接';
+      btn.disabled = false;
+    }
+  }
+
+  function setModalMsg(type, text) {
+    const el = document.getElementById('modalMsg');
+    el.className = 'modal-msg' + (type ? ' ' + type : '');
+    el.textContent = text;
+  }
+
+  // ── URL Check ──────────────────────────────────────────
   function parseURLs(raw) {
     return raw
       .split(/[\n\/]+/)
@@ -316,41 +443,12 @@ https://github.com
   async function checkURL(url) {
     const start = Date.now();
     try {
-      const resp = await fetch(url, {
-        method: 'HEAD',
-        mode: 'no-cors',
-        signal: AbortSignal.timeout(8000),
-      });
-      const ms = Date.now() - start;
-      // no-cors 返回 opaque，status 为 0 但 promise resolved → 可达
-      return { status: 'cors', label: '可访问*', ms };
+      await fetch(url, { method: 'HEAD', mode: 'no-cors', signal: AbortSignal.timeout(8000) });
+      return { status: 'cors', label: '可访问*', ms: Date.now() - start };
     } catch (e) {
       const ms = Date.now() - start;
-      if (e.name === 'AbortError' || e.name === 'TimeoutError') {
-        return { status: 'fail', label: '超时', ms };
-      }
-      // TypeError: network error → 真正不可达
-      return { status: 'fail', label: '不可达', ms };
+      return { status: 'fail', label: e.name === 'AbortError' || e.name === 'TimeoutError' ? '超时' : '不可达', ms };
     }
-  }
-
-  function makeCard(url) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <span class="badge pending">检测中…</span>
-      <span class="url">${escHtml(url)}</span>
-      <span class="info">—</span>
-    `;
-    return card;
-  }
-
-  function updateCard(card, result) {
-    const badge = card.querySelector('.badge');
-    const info  = card.querySelector('.info');
-    badge.className = 'badge ' + result.status;
-    badge.textContent = result.label;
-    info.textContent = result.ms + ' ms';
   }
 
   function escHtml(s) {
@@ -360,50 +458,41 @@ https://github.com
   async function startCheck() {
     const raw = document.getElementById('urlInput').value.trim();
     if (!raw) return;
-
     const urls = parseURLs(raw);
     if (!urls.length) return;
-
-    // reset
-    const right = document.getElementById('right');
-    right.innerHTML = '';
-
-    // summary bar
-    const bar = document.createElement('div');
-    bar.className = 'summary-bar';
-    bar.id = 'summaryBar';
-    bar.innerHTML = `
-      <div>共 <b>${urls.length}</b> 个</div>
-      <div class="s-ok">可访问 <b id="cOk">0</b></div>
-      <div class="s-fail">不可达 <b id="cFail">0</b></div>
-      <div class="s-warn">CORS限制* <b id="cCors">0</b></div>
-    `;
-    right.appendChild(bar);
-
-    // results container
-    const container = document.createElement('div');
-    container.className = 'results';
-    right.appendChild(container);
-
-    // progress
-    const pw = document.getElementById('progressWrap');
-    const pb = document.getElementById('progressBar');
-    pw.style.display = 'block';
 
     lastResults = [];
     document.getElementById('btnTelegram').style.display = 'none';
 
-    // build cards first
+    const right = document.getElementById('right');
+    right.innerHTML = '';
+
+    const bar = document.createElement('div');
+    bar.className = 'summary-bar';
+    bar.innerHTML = `
+      <div>共 <b>${urls.length}</b> 个</div>
+      <div class="s-ok">可访问 <b id="cOk">0</b></div>
+      <div class="s-fail">不可达 <b id="cFail">0</b></div>
+      <div class="s-warn">CORS限制 <b id="cCors">0</b></div>`;
+    right.appendChild(bar);
+
+    const container = document.createElement('div');
+    container.className = 'results';
+    right.appendChild(container);
+
+    const pw = document.getElementById('progressWrap');
+    const pb = document.getElementById('progressBar');
+    pw.style.display = 'block';
+
     const cards = urls.map(url => {
-      const card = makeCard(url);
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<span class="badge pending">检测中…</span><span class="url">${escHtml(url)}</span><span class="info">—</span>`;
       container.appendChild(card);
       return { url, card };
     });
 
     let ok = 0, fail = 0, cors = 0, done = 0;
-
-    // check concurrently (max 5)
-    const CONCURRENCY = 5;
     let idx = 0;
 
     async function worker() {
@@ -412,82 +501,55 @@ https://github.com
         const { url, card } = cards[i];
         const result = await checkURL(url);
         lastResults.push({ url, ...result });
-        updateCard(card, result);
+        card.querySelector('.badge').className = 'badge ' + result.status;
+        card.querySelector('.badge').textContent = result.label;
+        card.querySelector('.info').textContent = result.ms + ' ms';
         if (result.status === 'cors') cors++;
         else if (result.status === 'ok') ok++;
         else fail++;
         done++;
         document.getElementById('cOk').textContent   = ok + cors;
-        document.getElementById('cFail').textContent  = fail;
-        document.getElementById('cCors').textContent  = cors;
+        document.getElementById('cFail').textContent = fail;
+        document.getElementById('cCors').textContent = cors;
         pb.style.width = (done / urls.length * 100) + '%';
       }
     }
 
-    const workers = Array.from({ length: Math.min(CONCURRENCY, urls.length) }, worker);
-    await Promise.all(workers);
+    await Promise.all(Array.from({ length: Math.min(5, urls.length) }, worker));
 
     pw.style.display = 'none';
     pb.style.width = '0%';
-
     document.getElementById('btnTelegram').style.display = 'block';
 
-    // add footnote
     const note = document.createElement('p');
     note.style.cssText = 'font-size:12px;color:#aaa;padding:4px 0';
     note.textContent = '* 浏览器安全策略限制，无法获取精确状态码，但服务器有响应即视为可访问。';
     right.appendChild(note);
   }
 
-  // ── Telegram ──────────────────────────────────────────
-  function toggleTg() {
-    const body  = document.getElementById('tgBody');
-    const arrow = document.getElementById('tgArrow');
-    const open  = body.classList.toggle('open');
-    arrow.innerHTML = open ? '&#9650;' : '&#9660;';
-  }
-
-  function saveTgConfig() {
-    localStorage.setItem('tg_token',   document.getElementById('tgToken').value);
-    localStorage.setItem('tg_chat_id', document.getElementById('tgChatId').value);
-  }
-
-  function loadTgConfig() {
-    document.getElementById('tgToken').value   = localStorage.getItem('tg_token')   || '';
-    document.getElementById('tgChatId').value  = localStorage.getItem('tg_chat_id') || '';
-  }
-
+  // ── Telegram Send ──────────────────────────────────────
   async function sendToTelegram() {
-    const token  = document.getElementById('tgToken').value.trim();
-    const chatId = document.getElementById('tgChatId').value.trim();
+    const token  = localStorage.getItem('tg_token')   || '';
+    const chatId = localStorage.getItem('tg_chat_id') || '';
 
     if (!token || !chatId) {
-      alert('请先填写 Bot Token 和 Chat ID');
-      toggleTg();
-      document.getElementById('tgBody').classList.add('open');
+      openSettings();
+      setModalMsg('err', '请先填写并保存 Token 和 Chat ID');
       return;
     }
-
-    if (!lastResults || !lastResults.length) {
-      alert('还没有检测结果，请先检测');
-      return;
-    }
+    if (!lastResults.length) return;
 
     const ok   = lastResults.filter(r => r.status !== 'fail');
     const fail = lastResults.filter(r => r.status === 'fail');
     const now  = new Date().toLocaleString('zh-CN', { hour12: false });
 
     let msg = `🔍 URL 检测报告\n🕐 ${now}\n\n`;
-    msg += `共 ${lastResults.length} 个  ✅ 可访问 ${ok.length}  ❌ 不可达 ${fail.length}\n`;
-
+    msg += `共 ${lastResults.length} 个  ✅ 可访问 ${ok.length}  ❌ 不可达 ${fail.length}`;
     if (fail.length) {
-      msg += `\n❌ 不可达列表:\n`;
-      fail.forEach(r => { msg += `• ${r.url}  (${r.label}, ${r.ms}ms)\n`; });
+      msg += `\n\n❌ 不可达:\n` + fail.map(r => `• ${r.url}  (${r.label}, ${r.ms}ms)`).join('\n');
     }
-
     if (ok.length) {
-      msg += `\n✅ 可访问列表:\n`;
-      ok.forEach(r => { msg += `• ${r.url}  (${r.ms}ms)\n`; });
+      msg += `\n\n✅ 可访问:\n` + ok.map(r => `• ${r.url}  (${r.ms}ms)`).join('\n');
     }
 
     const btn = document.getElementById('btnTelegram');
@@ -515,13 +577,13 @@ https://github.com
       btn.disabled = false;
     }
   }
-  // ────────────────────────────────────────────────────
 
   function clearAll() {
     document.getElementById('urlInput').value = '';
-    const right = document.getElementById('right');
-    right.innerHTML = `
-      <div class="empty" id="emptyState">
+    document.getElementById('btnTelegram').style.display = 'none';
+    lastResults = [];
+    document.getElementById('right').innerHTML = `
+      <div class="empty">
         <div class="icon">&#128269;</div>
         <p>在左侧贴入 URL，点击「开始检测」</p>
       </div>`;
