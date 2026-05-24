@@ -188,6 +188,61 @@
       background: #7c83fd;
       transition: width .3s;
     }
+
+    /* Telegram 设置区 */
+    .tg-section {
+      border-top: 1px solid #f0f0f0;
+      padding-top: 12px;
+    }
+
+    .tg-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tg-toggle label {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tg-toggle .arrow {
+      font-size: 10px;
+      color: #aaa;
+      transition: transform .2s;
+    }
+
+    .tg-body { display: none; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .tg-body.open { display: flex; }
+
+    .tg-body input {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .tg-body input:focus { border-color: #7c83fd; }
+
+    .tg-body .field-label {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 3px;
+    }
+
+    #btnTelegram {
+      background: #229ED9;
+      color: #fff;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -213,6 +268,26 @@ https://github.com
       <button id="btnCheck" onclick="startCheck()">&#9654; 开始检测</button>
       <button id="btnClear" onclick="clearAll()">&#10005; 清空</button>
     </div>
+    <button id="btnTelegram" onclick="sendToTelegram()">&#9992; 发送到 Telegram</button>
+
+    <!-- Telegram 设置 -->
+    <div class="tg-section">
+      <div class="tg-toggle" onclick="toggleTg()">
+        <label>&#128337; Telegram 设置</label>
+        <span class="arrow" id="tgArrow">&#9660;</span>
+      </div>
+      <div class="tg-body" id="tgBody">
+        <div>
+          <div class="field-label">Bot Token</div>
+          <input id="tgToken" type="password" placeholder="123456:ABCdef..." oninput="saveTgConfig()" autocomplete="off">
+        </div>
+        <div>
+          <div class="field-label">Chat ID（群组为负数）</div>
+          <input id="tgChatId" type="text" placeholder="-1001234567890" oninput="saveTgConfig()">
+        </div>
+        <p class="hint">Token 保存在本地浏览器，不会上传到任何服务器。</p>
+      </div>
+    </div>
   </div>
 
   <!-- 右侧 -->
@@ -226,6 +301,9 @@ https://github.com
 
 <script>
   let controller = null;
+  let lastResults = [];
+
+  window.addEventListener('DOMContentLoaded', loadTgConfig);
 
   function parseURLs(raw) {
     return raw
@@ -312,6 +390,9 @@ https://github.com
     const pb = document.getElementById('progressBar');
     pw.style.display = 'block';
 
+    lastResults = [];
+    document.getElementById('btnTelegram').style.display = 'none';
+
     // build cards first
     const cards = urls.map(url => {
       const card = makeCard(url);
@@ -330,6 +411,7 @@ https://github.com
         const i = idx++;
         const { url, card } = cards[i];
         const result = await checkURL(url);
+        lastResults.push({ url, ...result });
         updateCard(card, result);
         if (result.status === 'cors') cors++;
         else if (result.status === 'ok') ok++;
@@ -348,12 +430,92 @@ https://github.com
     pw.style.display = 'none';
     pb.style.width = '0%';
 
+    document.getElementById('btnTelegram').style.display = 'block';
+
     // add footnote
     const note = document.createElement('p');
     note.style.cssText = 'font-size:12px;color:#aaa;padding:4px 0';
     note.textContent = '* 浏览器安全策略限制，无法获取精确状态码，但服务器有响应即视为可访问。';
     right.appendChild(note);
   }
+
+  // ── Telegram ──────────────────────────────────────────
+  function toggleTg() {
+    const body  = document.getElementById('tgBody');
+    const arrow = document.getElementById('tgArrow');
+    const open  = body.classList.toggle('open');
+    arrow.innerHTML = open ? '&#9650;' : '&#9660;';
+  }
+
+  function saveTgConfig() {
+    localStorage.setItem('tg_token',   document.getElementById('tgToken').value);
+    localStorage.setItem('tg_chat_id', document.getElementById('tgChatId').value);
+  }
+
+  function loadTgConfig() {
+    document.getElementById('tgToken').value   = localStorage.getItem('tg_token')   || '';
+    document.getElementById('tgChatId').value  = localStorage.getItem('tg_chat_id') || '';
+  }
+
+  async function sendToTelegram() {
+    const token  = document.getElementById('tgToken').value.trim();
+    const chatId = document.getElementById('tgChatId').value.trim();
+
+    if (!token || !chatId) {
+      alert('请先填写 Bot Token 和 Chat ID');
+      toggleTg();
+      document.getElementById('tgBody').classList.add('open');
+      return;
+    }
+
+    if (!lastResults || !lastResults.length) {
+      alert('还没有检测结果，请先检测');
+      return;
+    }
+
+    const ok   = lastResults.filter(r => r.status !== 'fail');
+    const fail = lastResults.filter(r => r.status === 'fail');
+    const now  = new Date().toLocaleString('zh-CN', { hour12: false });
+
+    let msg = `🔍 URL 检测报告\n🕐 ${now}\n\n`;
+    msg += `共 ${lastResults.length} 个  ✅ 可访问 ${ok.length}  ❌ 不可达 ${fail.length}\n`;
+
+    if (fail.length) {
+      msg += `\n❌ 不可达列表:\n`;
+      fail.forEach(r => { msg += `• ${r.url}  (${r.label}, ${r.ms}ms)\n`; });
+    }
+
+    if (ok.length) {
+      msg += `\n✅ 可访问列表:\n`;
+      ok.forEach(r => { msg += `• ${r.url}  (${r.ms}ms)\n`; });
+    }
+
+    const btn = document.getElementById('btnTelegram');
+    btn.textContent = '发送中…';
+    btn.disabled = true;
+
+    try {
+      const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: msg }),
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        btn.textContent = '✓ 已发送';
+        setTimeout(() => { btn.textContent = '✈ 发送到 Telegram'; btn.disabled = false; }, 2000);
+      } else {
+        alert('发送失败：' + (data.description || JSON.stringify(data)));
+        btn.textContent = '✈ 发送到 Telegram';
+        btn.disabled = false;
+      }
+    } catch (e) {
+      alert('网络错误：' + e.message);
+      btn.textContent = '✈ 发送到 Telegram';
+      btn.disabled = false;
+    }
+  }
+  // ────────────────────────────────────────────────────
 
   function clearAll() {
     document.getElementById('urlInput').value = '';
