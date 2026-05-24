@@ -2,348 +2,483 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>URL 可访问性检测</title>
+  <title>URL Checker</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --border: #e8eaed;
+      --text: #1a1b1e;
+      --muted: #8a8f9c;
+      --accent: #5b5ef4;
+      --red: #e5484d;
+      --green: #30a46c;
+      --tg: #229ED9;
+      --radius: 10px;
+    }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f0f2f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+      background: var(--bg);
       height: 100vh;
       display: flex;
       flex-direction: column;
+      color: var(--text);
+      font-size: 14px;
     }
 
     /* ── Header ── */
     header {
-      background: #1a1a2e;
-      color: #fff;
-      padding: 14px 24px;
-      font-size: 16px;
-      font-weight: 600;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 52px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      flex-shrink: 0;
     }
-    header .dot { color: #7c83fd; }
+
+    .logo {
+      width: 22px; height: 22px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo svg { width: 12px; height: 12px; fill: #fff; }
+
+    header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -.2px;
+    }
+
     header .spacer { flex: 1; }
 
-    #btnSettings {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,.25);
-      color: #fff;
-      border-radius: 8px;
-      padding: 6px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
+    .btn-settings {
       display: flex;
       align-items: center;
-      gap: 6px;
-      transition: background .15s;
-      flex: unset;
+      gap: 7px;
+      padding: 6px 13px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
     }
-    #btnSettings:hover { background: rgba(255,255,255,.1); opacity: 1; }
-
-    /* indicator dot on settings button */
-    #btnSettings .dot-indicator {
-      width: 7px; height: 7px;
+    .btn-settings:hover { border-color: var(--accent); color: var(--accent); background: #f0f0ff; }
+    .btn-settings .pip {
+      width: 6px; height: 6px;
       border-radius: 50%;
-      background: #f87171;
-      display: none;
+      background: #d1d5db;
+      transition: background .2s;
     }
-    #btnSettings.configured .dot-indicator {
-      background: #4ade80;
-      display: inline-block;
-    }
+    .btn-settings.configured .pip { background: var(--green); }
 
-    /* ── Layout ── */
-    .main {
+    /* ── Main Layout ── */
+    .layout {
       display: flex;
       flex: 1;
       overflow: hidden;
     }
 
-    /* ── Left panel ── */
+    /* ── Left Panel ── */
     .left {
-      width: 380px;
-      min-width: 280px;
-      background: #fff;
-      border-right: 1px solid #dde1ea;
+      width: 340px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      padding: 20px;
-      gap: 14px;
+      overflow: hidden;
     }
 
-    .left > label {
-      font-size: 13px;
+    .panel-section {
+      display: flex;
+      flex-direction: column;
+      padding: 16px 18px;
+      gap: 8px;
+    }
+
+    .panel-section + .panel-section {
+      border-top: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 11px;
       font-weight: 600;
-      color: #555;
+      color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: .5px;
+      letter-spacing: .6px;
     }
 
-    .left textarea {
-      flex: 1;
+    textarea {
       resize: none;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
       font-size: 13px;
-      font-family: "SF Mono", "Fira Code", monospace;
-      line-height: 1.7;
-      color: #222;
+      font-family: inherit;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
       outline: none;
-      transition: border-color .2s;
+      transition: border-color .15s;
     }
-    .left textarea:focus { border-color: #7c83fd; }
+    textarea:focus { border-color: var(--accent); background: #fff; }
+    textarea::placeholder { color: #c0c4cf; }
 
-    .hint { font-size: 12px; color: #999; line-height: 1.5; }
+    #noteInput {
+      height: 90px;
+      font-family: inherit;
+    }
 
-    .progress { height: 3px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
-    .progress-bar { height: 100%; background: #7c83fd; transition: width .3s; }
+    .url-section {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 18px;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+    }
 
-    .btn-group { display: flex; gap: 8px; }
+    #urlInput { flex: 1; font-family: "SF Mono", "Fira Code", monospace; font-size: 12.5px; }
+
+    /* ── Action Bar ── */
+    .action-bar {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-row { display: flex; gap: 8px; }
 
     button {
-      flex: 1;
-      padding: 10px;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--radius);
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      transition: opacity .15s;
+      padding: 9px 14px;
+      transition: opacity .15s, transform .1s;
+      white-space: nowrap;
     }
-    button:hover { opacity: .85; }
+    button:active { transform: scale(.97); }
+    button:disabled { opacity: .5; cursor: default; transform: none; }
 
-    #btnCheck  { background: #7c83fd; color: #fff; }
-    #btnClear  { background: #f3f4f6; color: #555; }
-    #btnTelegram {
-      background: #229ED9;
+    .btn-primary { background: var(--accent); color: #fff; flex: 1; }
+    .btn-ghost   { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+
+    .btn-tg {
+      background: var(--tg);
       color: #fff;
+      width: 100%;
       display: none;
     }
 
-    /* ── Right panel ── */
+    .progress-wrap {
+      height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width .25s;
+    }
+
+    /* ── Right Panel ── */
     .right {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
+      gap: 16px;
+    }
+
+    .empty-state {
+      margin: auto;
+      text-align: center;
+      color: #c8cbd6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .empty-state svg { width: 40px; height: 40px; opacity: .4; }
+    .empty-state p { font-size: 13px; }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
     }
 
-    .empty { margin: auto; text-align: center; color: #bbb; }
-    .empty .icon { font-size: 48px; margin-bottom: 12px; }
-    .empty p { font-size: 14px; }
-
-    .summary-bar {
-      background: #fff;
-      border-radius: 10px;
-      padding: 14px 20px;
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
       display: flex;
-      gap: 24px;
-      font-size: 13px;
-      color: #555;
-      border: 1px solid #e5e7eb;
+      flex-direction: column;
+      gap: 4px;
     }
-    .summary-bar b { font-size: 20px; font-weight: 700; }
-    .s-ok   { color: #16a34a; }
-    .s-fail { color: #dc2626; }
-    .s-warn { color: #d97706; }
 
-    .results { display: flex; flex-direction: column; gap: 8px; }
+    .stat-card .num {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .stat-card .lbl {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
 
-    .card {
-      background: #fff;
-      border-radius: 10px;
-      padding: 14px 16px;
+    .stat-card.total .num { color: var(--text); }
+    .stat-card.ok    .num { color: var(--green); }
+    .stat-card.fail  .num { color: var(--red); }
+
+    /* Failed list */
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      padding-bottom: 2px;
+    }
+
+    .result-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .result-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 11px 14px;
       display: flex;
       align-items: center;
       gap: 12px;
-      border: 1px solid #e5e7eb;
-      animation: fadeIn .2s ease;
+      animation: up .18s ease;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+    @keyframes up { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
 
-    .badge {
-      min-width: 80px;
-      text-align: center;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
+    .result-item .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
-    .badge.ok      { background: #dcfce7; color: #16a34a; }
-    .badge.fail    { background: #fee2e2; color: #dc2626; }
-    .badge.cors    { background: #fef3c7; color: #d97706; }
-    .badge.pending { background: #f3f4f6; color: #999; }
+    .status-dot.ok   { background: var(--green); }
+    .status-dot.fail { background: var(--red); }
+    .status-dot.cors { background: #f59e0b; }
+    .status-dot.pending { background: var(--border); }
 
-    .card .url  { flex: 1; font-size: 13px; font-family: "SF Mono","Fira Code",monospace; color: #333; word-break: break-all; }
-    .card .info { font-size: 12px; color: #888; white-space: nowrap; }
+    .result-item .url-text {
+      flex: 1;
+      font-size: 12.5px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      color: var(--text);
+      word-break: break-all;
+      line-height: 1.4;
+    }
 
-    /* ── Settings Modal ── */
-    .modal-backdrop {
+    .result-item .meta {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .result-item.is-fail {
+      border-color: #fecdd3;
+      background: #fff8f8;
+    }
+    .result-item.is-fail .url-text { color: var(--red); }
+
+    /* checking animation */
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+    .status-dot.pending { animation: pulse 1.2s infinite; }
+
+    /* ── Modal ── */
+    .overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.45);
-      z-index: 100;
+      background: rgba(0,0,0,.35);
+      z-index: 200;
       align-items: center;
       justify-content: center;
+      backdrop-filter: blur(2px);
     }
-    .modal-backdrop.open { display: flex; }
+    .overlay.open { display: flex; }
 
     .modal {
-      background: #fff;
+      background: var(--surface);
       border-radius: 14px;
-      width: 420px;
-      max-width: 95vw;
-      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      width: 400px;
+      max-width: 94vw;
+      box-shadow: 0 24px 64px rgba(0,0,0,.18);
+      animation: popIn .18s ease;
       overflow: hidden;
-      animation: modalIn .2s ease;
     }
-    @keyframes modalIn { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes popIn { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
 
-    .modal-header {
-      padding: 18px 22px 14px;
-      border-bottom: 1px solid #f0f0f0;
+    .modal-head {
+      padding: 20px 22px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      border-bottom: 1px solid var(--border);
     }
-    .modal-header h2 { font-size: 15px; font-weight: 700; color: #1a1a2e; }
-    .modal-close {
-      background: #f3f4f6;
-      border: none;
-      border-radius: 6px;
-      width: 28px; height: 28px;
-      cursor: pointer;
-      font-size: 16px;
-      color: #666;
-      display: flex; align-items: center; justify-content: center;
-      flex: unset;
-      padding: 0;
-    }
-    .modal-close:hover { background: #e5e7eb; opacity: 1; }
+    .modal-head h2 { font-size: 14px; font-weight: 700; }
 
-    .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+    .modal-x {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
 
     .field { display: flex; flex-direction: column; gap: 5px; }
-    .field-label { font-size: 12px; font-weight: 600; color: #555; }
-    .field-sub   { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .field-lbl { font-size: 12px; font-weight: 600; color: var(--text); }
+    .field-sub { font-size: 11px; color: var(--muted); }
 
     .field input {
-      width: 100%;
-      border: 1px solid #d1d5db;
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 9px 12px;
       font-size: 13px;
       font-family: "SF Mono", "Fira Code", monospace;
+      color: var(--text);
+      background: var(--bg);
       outline: none;
-      transition: border-color .2s;
-      color: #222;
+      transition: border-color .15s;
+      width: 100%;
     }
-    .field input:focus { border-color: #7c83fd; }
-
-    .modal-footer {
-      padding: 14px 22px 18px;
-      display: flex;
-      gap: 8px;
-      border-top: 1px solid #f0f0f0;
-    }
-
-    #btnTest {
-      background: #f3f4f6;
-      color: #555;
-      font-size: 13px;
-      padding: 9px 16px;
-      flex: unset;
-    }
-    #btnSave {
-      flex: 1;
-      background: #7c83fd;
-      color: #fff;
-      font-size: 13px;
-      padding: 9px;
-    }
+    .field input:focus { border-color: var(--accent); background: #fff; }
 
     .modal-msg {
       font-size: 12px;
       padding: 8px 12px;
       border-radius: 8px;
       display: none;
+      font-weight: 500;
     }
-    .modal-msg.ok   { background: #dcfce7; color: #16a34a; display: block; }
-    .modal-msg.err  { background: #fee2e2; color: #dc2626; display: block; }
+    .modal-msg.ok  { display: block; background: #e8f7ee; color: var(--green); }
+    .modal-msg.err { display: block; background: #fef0f0; color: var(--red); }
+
+    .modal-foot {
+      padding: 14px 22px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+    .btn-test { background: var(--bg); color: var(--text); border: 1px solid var(--border); font-size: 12px; }
+    .btn-save { background: var(--accent); color: #fff; flex: 1; }
   </style>
 </head>
 <body>
 
 <header>
-  <span class="dot">&#9679;</span> URL 可访问性批量检测
+  <div class="logo">
+    <svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5"/></svg>
+  </div>
+  <h1>URL Checker</h1>
   <div class="spacer"></div>
-  <button id="btnSettings" onclick="openSettings()">
-    <span class="dot-indicator"></span>
-    &#9881; Telegram 设置
+  <button class="btn-settings" id="btnSettings" onclick="openModal()">
+    <span class="pip"></span>
+    Telegram
   </button>
 </header>
 
-<div class="main">
-  <!-- 左侧 -->
+<div class="layout">
+
+  <!-- Left -->
   <div class="left">
-    <label>粘贴 URL 列表</label>
-    <textarea id="urlInput" placeholder="https://example.com
-https://google.com
-https://github.com
 
-支持换行或 / 分隔"></textarea>
-    <p class="hint">每行一个，或用 <code>/</code> 分隔。自动补全 https:// 前缀。</p>
-    <div class="progress" id="progressWrap" style="display:none">
-      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    <div class="panel-section">
+      <div class="section-label">Note</div>
+      <textarea id="noteInput" placeholder="Add a message to include in the Telegram report…"></textarea>
     </div>
-    <div class="btn-group">
-      <button id="btnCheck" onclick="startCheck()">&#9654; 开始检测</button>
-      <button id="btnClear" onclick="clearAll()">&#10005; 清空</button>
+
+    <div class="url-section">
+      <div class="section-label">URLs</div>
+      <textarea id="urlInput" placeholder="https://example.com&#10;https://google.com&#10;&#10;One per line, or separate with /"></textarea>
     </div>
-    <button id="btnTelegram" onclick="sendToTelegram()">&#9992; 发送到 Telegram</button>
+
+    <div class="action-bar">
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="startCheck()">Run Check</button>
+        <button class="btn-ghost" onclick="clearAll()">Clear</button>
+      </div>
+      <button class="btn-tg" id="btnTelegram" onclick="sendReport()">Send to Telegram</button>
+    </div>
+
   </div>
 
-  <!-- 右侧 -->
+  <!-- Right -->
   <div class="right" id="right">
-    <div class="empty">
-      <div class="icon">&#128269;</div>
-      <p>在左侧贴入 URL，点击「开始检测」</p>
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <p>Paste URLs on the left and run a check</p>
     </div>
   </div>
+
 </div>
 
 <!-- Settings Modal -->
-<div class="modal-backdrop" id="modalBackdrop" onclick="backdropClick(event)">
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
   <div class="modal">
-    <div class="modal-header">
-      <h2>&#9881; Telegram 设置</h2>
-      <button class="modal-close" onclick="closeSettings()">&#10005;</button>
+    <div class="modal-head">
+      <h2>Telegram Settings</h2>
+      <button class="modal-x" onclick="closeModal()">&#10005;</button>
     </div>
     <div class="modal-body">
       <div class="field">
-        <div class="field-label">Bot Token</div>
-        <input id="tgToken" type="password" placeholder="123456789:ABCdefGHIjkl..." autocomplete="off">
-        <div class="field-sub">从 @BotFather 获取</div>
+        <div class="field-lbl">Bot Token</div>
+        <input id="tgToken" type="password" placeholder="123456789:ABCdef…" autocomplete="off">
+        <div class="field-sub">Get from @BotFather</div>
       </div>
       <div class="field">
-        <div class="field-label">Chat ID</div>
+        <div class="field-lbl">Chat ID</div>
         <input id="tgChatId" type="text" placeholder="-1001234567890">
-        <div class="field-sub">群组 ID 为负数。不知道？把 bot 加入群后发一条消息，再问 @userinfobot</div>
+        <div class="field-sub">Group IDs start with −. Add the bot to the group first.</div>
       </div>
       <div class="modal-msg" id="modalMsg"></div>
     </div>
-    <div class="modal-footer">
-      <button id="btnTest" onclick="testTelegram()">&#128161; 测试连接</button>
-      <button id="btnSave" onclick="saveSettings()">&#10003; 保存</button>
+    <div class="modal-foot">
+      <button class="btn-test" onclick="testTg()">Send test message</button>
+      <button class="btn-save" onclick="saveModal()">Save</button>
     </div>
   </div>
 </div>
@@ -351,108 +486,77 @@ https://github.com
 <script>
   let lastResults = [];
 
-  // ── Init ───────────────────────────────────────────────
-  window.addEventListener('DOMContentLoaded', () => {
-    const token  = localStorage.getItem('tg_token')   || '';
-    const chatId = localStorage.getItem('tg_chat_id') || '';
-    document.getElementById('tgToken').value  = token;
-    document.getElementById('tgChatId').value = chatId;
-    updateSettingsIndicator();
-  });
-
-  function updateSettingsIndicator() {
-    const configured = !!(localStorage.getItem('tg_token') && localStorage.getItem('tg_chat_id'));
-    document.getElementById('btnSettings').classList.toggle('configured', configured);
-  }
-
-  // ── Settings Modal ─────────────────────────────────────
-  function openSettings() {
+  // ── Boot ────────────────────────────────────────────────
+  addEventListener('DOMContentLoaded', () => {
     document.getElementById('tgToken').value  = localStorage.getItem('tg_token')   || '';
     document.getElementById('tgChatId').value = localStorage.getItem('tg_chat_id') || '';
-    setModalMsg('', '');
-    document.getElementById('modalBackdrop').classList.add('open');
+    refreshIndicator();
+  });
+
+  function refreshIndicator() {
+    const ok = !!(localStorage.getItem('tg_token') && localStorage.getItem('tg_chat_id'));
+    document.getElementById('btnSettings').classList.toggle('configured', ok);
   }
 
-  function closeSettings() {
-    document.getElementById('modalBackdrop').classList.remove('open');
+  // ── Modal ────────────────────────────────────────────────
+  function openModal() {
+    document.getElementById('tgToken').value  = localStorage.getItem('tg_token')   || '';
+    document.getElementById('tgChatId').value = localStorage.getItem('tg_chat_id') || '';
+    setMsg('', '');
+    document.getElementById('overlay').classList.add('open');
   }
+  function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+  function overlayClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
 
-  function backdropClick(e) {
-    if (e.target === document.getElementById('modalBackdrop')) closeSettings();
-  }
-
-  function saveSettings() {
+  function saveModal() {
     const token  = document.getElementById('tgToken').value.trim();
     const chatId = document.getElementById('tgChatId').value.trim();
-    if (!token || !chatId) {
-      setModalMsg('err', '请填写 Token 和 Chat ID');
-      return;
-    }
+    if (!token || !chatId) { setMsg('err', 'Both fields are required.'); return; }
     localStorage.setItem('tg_token',   token);
     localStorage.setItem('tg_chat_id', chatId);
-    updateSettingsIndicator();
-    setModalMsg('ok', '已保存');
-    setTimeout(closeSettings, 800);
+    refreshIndicator();
+    setMsg('ok', 'Saved.');
+    setTimeout(closeModal, 700);
   }
 
-  async function testTelegram() {
+  async function testTg() {
     const token  = document.getElementById('tgToken').value.trim();
     const chatId = document.getElementById('tgChatId').value.trim();
-    if (!token || !chatId) { setModalMsg('err', '请先填写 Token 和 Chat ID'); return; }
-
-    const btn = document.getElementById('btnTest');
-    btn.textContent = '测试中…';
-    btn.disabled = true;
-    setModalMsg('', '');
-
+    if (!token || !chatId) { setMsg('err', 'Fill in both fields first.'); return; }
+    const btn = document.querySelector('.btn-test');
+    btn.textContent = 'Sending…'; btn.disabled = true;
+    setMsg('', '');
     try {
-      const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: '✅ URL 检测工具连接测试成功！' }),
-      });
-      const data = await resp.json();
-      if (data.ok) {
-        setModalMsg('ok', '测试成功，消息已发送到群组');
-      } else {
-        setModalMsg('err', '失败：' + (data.description || JSON.stringify(data)));
-      }
-    } catch (e) {
-      setModalMsg('err', '网络错误：' + e.message);
-    } finally {
-      btn.textContent = '&#128161; 测试连接';
-      btn.disabled = false;
-    }
+      const r = await tgPost(token, chatId, '✅ URL Checker — connection test successful.');
+      r.ok ? setMsg('ok', 'Test message sent!') : setMsg('err', r.description || 'Failed.');
+    } catch { setMsg('err', 'Network error.'); }
+    btn.textContent = 'Send test message'; btn.disabled = false;
   }
 
-  function setModalMsg(type, text) {
+  function setMsg(type, text) {
     const el = document.getElementById('modalMsg');
     el.className = 'modal-msg' + (type ? ' ' + type : '');
     el.textContent = text;
   }
 
-  // ── URL Check ──────────────────────────────────────────
+  // ── Check ────────────────────────────────────────────────
   function parseURLs(raw) {
-    return raw
-      .split(/[\n\/]+/)
-      .map(s => s.trim())
-      .filter(Boolean)
-      .map(u => /^https?:\/\//i.test(u) ? u : 'https://' + u);
+    return [...new Set(
+      raw.split(/[\n/]+/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .map(u => /^https?:\/\//i.test(u) ? u : 'https://' + u)
+    )];
   }
 
   async function checkURL(url) {
-    const start = Date.now();
+    const t = Date.now();
     try {
       await fetch(url, { method: 'HEAD', mode: 'no-cors', signal: AbortSignal.timeout(8000) });
-      return { status: 'cors', label: '可访问*', ms: Date.now() - start };
+      return { ok: true, ms: Date.now() - t };
     } catch (e) {
-      const ms = Date.now() - start;
-      return { status: 'fail', label: e.name === 'AbortError' || e.name === 'TimeoutError' ? '超时' : '不可达', ms };
+      return { ok: false, ms: Date.now() - t, reason: (e.name === 'AbortError' || e.name === 'TimeoutError') ? 'Timeout' : 'Unreachable' };
     }
-  }
-
-  function escHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   async function startCheck() {
@@ -467,127 +571,143 @@ https://github.com
     const right = document.getElementById('right');
     right.innerHTML = '';
 
-    const bar = document.createElement('div');
-    bar.className = 'summary-bar';
-    bar.innerHTML = `
-      <div>共 <b>${urls.length}</b> 个</div>
-      <div class="s-ok">可访问 <b id="cOk">0</b></div>
-      <div class="s-fail">不可达 <b id="cFail">0</b></div>
-      <div class="s-warn">CORS限制 <b id="cCors">0</b></div>`;
-    right.appendChild(bar);
+    // Stats row (starts at 0)
+    const statsRow = el('div', 'stats-row');
+    statsRow.innerHTML = `
+      <div class="stat-card total"><div class="num" id="sTotal">${urls.length}</div><div class="lbl">Total</div></div>
+      <div class="stat-card ok">  <div class="num" id="sOk">0</div>   <div class="lbl">Accessed</div></div>
+      <div class="stat-card fail"><div class="num" id="sFail">0</div> <div class="lbl">Failed</div></div>`;
+    right.appendChild(statsRow);
 
-    const container = document.createElement('div');
-    container.className = 'results';
-    right.appendChild(container);
+    // Result list
+    const listWrap = el('div');
+    const listTitle = el('div', 'section-title');
+    listTitle.textContent = 'Results';
+    const list = el('div', 'result-list');
+    listWrap.append(listTitle, list);
+    right.appendChild(listWrap);
+
+    // Build pending rows
+    const rows = urls.map(url => {
+      const item = el('div', 'result-item');
+      item.innerHTML = `<span class="status-dot pending"></span>
+        <span class="url-text">${esc(url)}</span>
+        <span class="meta">—</span>`;
+      list.appendChild(item);
+      return { url, item };
+    });
 
     const pw = document.getElementById('progressWrap');
     const pb = document.getElementById('progressBar');
     pw.style.display = 'block';
 
-    const cards = urls.map(url => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `<span class="badge pending">检测中…</span><span class="url">${escHtml(url)}</span><span class="info">—</span>`;
-      container.appendChild(card);
-      return { url, card };
-    });
-
-    let ok = 0, fail = 0, cors = 0, done = 0;
-    let idx = 0;
+    let okCount = 0, failCount = 0, done = 0, idx = 0;
 
     async function worker() {
-      while (idx < cards.length) {
+      while (idx < rows.length) {
         const i = idx++;
-        const { url, card } = cards[i];
-        const result = await checkURL(url);
-        lastResults.push({ url, ...result });
-        card.querySelector('.badge').className = 'badge ' + result.status;
-        card.querySelector('.badge').textContent = result.label;
-        card.querySelector('.info').textContent = result.ms + ' ms';
-        if (result.status === 'cors') cors++;
-        else if (result.status === 'ok') ok++;
-        else fail++;
+        const { url, item } = rows[i];
+        const res = await checkURL(url);
+        lastResults.push({ url, ...res });
+
+        const dot  = item.querySelector('.status-dot');
+        const meta = item.querySelector('.meta');
+        dot.className = 'status-dot ' + (res.ok ? 'cors' : 'fail');
+        meta.textContent = res.ms + ' ms' + (res.ok ? '' : ' · ' + res.reason);
+
+        if (res.ok) {
+          okCount++;
+        } else {
+          failCount++;
+          item.classList.add('is-fail');
+        }
+
         done++;
-        document.getElementById('cOk').textContent   = ok + cors;
-        document.getElementById('cFail').textContent = fail;
-        document.getElementById('cCors').textContent = cors;
+        document.getElementById('sOk').textContent   = okCount;
+        document.getElementById('sFail').textContent = failCount;
         pb.style.width = (done / urls.length * 100) + '%';
       }
     }
 
-    await Promise.all(Array.from({ length: Math.min(5, urls.length) }, worker));
+    await Promise.all(Array.from({ length: Math.min(6, urls.length) }, worker));
 
     pw.style.display = 'none';
     pb.style.width = '0%';
     document.getElementById('btnTelegram').style.display = 'block';
-
-    const note = document.createElement('p');
-    note.style.cssText = 'font-size:12px;color:#aaa;padding:4px 0';
-    note.textContent = '* 浏览器安全策略限制，无法获取精确状态码，但服务器有响应即视为可访问。';
-    right.appendChild(note);
   }
 
-  // ── Telegram Send ──────────────────────────────────────
-  async function sendToTelegram() {
+  // ── Telegram ─────────────────────────────────────────────
+  async function sendReport() {
     const token  = localStorage.getItem('tg_token')   || '';
     const chatId = localStorage.getItem('tg_chat_id') || '';
-
-    if (!token || !chatId) {
-      openSettings();
-      setModalMsg('err', '请先填写并保存 Token 和 Chat ID');
-      return;
-    }
+    if (!token || !chatId) { openModal(); setMsg('err', 'Save your credentials first.'); return; }
     if (!lastResults.length) return;
 
-    const ok   = lastResults.filter(r => r.status !== 'fail');
-    const fail = lastResults.filter(r => r.status === 'fail');
-    const now  = new Date().toLocaleString('zh-CN', { hour12: false });
+    const note    = document.getElementById('noteInput').value.trim();
+    const total   = lastResults.length;
+    const okList  = lastResults.filter(r => r.ok);
+    const failList= lastResults.filter(r => !r.ok);
 
-    let msg = `🔍 URL 检测报告\n🕐 ${now}\n\n`;
-    msg += `共 ${lastResults.length} 个  ✅ 可访问 ${ok.length}  ❌ 不可达 ${fail.length}`;
-    if (fail.length) {
-      msg += `\n\n❌ 不可达:\n` + fail.map(r => `• ${r.url}  (${r.label}, ${r.ms}ms)`).join('\n');
-    }
-    if (ok.length) {
-      msg += `\n\n✅ 可访问:\n` + ok.map(r => `• ${r.url}  (${r.ms}ms)`).join('\n');
+    let msg = '';
+    if (note) msg += note + '\n\n';
+    msg += `Total Tested: ${total}\n`;
+    msg += `Accessed: ${okList.length}\n`;
+    msg += `Failed: ${failList.length}`;
+    if (failList.length) {
+      msg += '\n\nFailed URLs:\n' + failList.map(r => r.url).join('\n');
     }
 
     const btn = document.getElementById('btnTelegram');
-    btn.textContent = '发送中…';
-    btn.disabled = true;
+    btn.textContent = 'Sending…'; btn.disabled = true;
 
     try {
-      const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: msg }),
-      });
-      const data = await resp.json();
+      const data = await tgPost(token, chatId, msg);
       if (data.ok) {
-        btn.textContent = '✓ 已发送';
-        setTimeout(() => { btn.textContent = '✈ 发送到 Telegram'; btn.disabled = false; }, 2000);
+        btn.textContent = '✓ Sent';
+        setTimeout(() => { btn.textContent = 'Send to Telegram'; btn.disabled = false; }, 2000);
       } else {
-        alert('发送失败：' + (data.description || JSON.stringify(data)));
-        btn.textContent = '✈ 发送到 Telegram';
-        btn.disabled = false;
+        alert('Error: ' + (data.description || JSON.stringify(data)));
+        btn.textContent = 'Send to Telegram'; btn.disabled = false;
       }
     } catch (e) {
-      alert('网络错误：' + e.message);
-      btn.textContent = '✈ 发送到 Telegram';
-      btn.disabled = false;
+      alert('Network error: ' + e.message);
+      btn.textContent = 'Send to Telegram'; btn.disabled = false;
     }
   }
 
+  async function tgPost(token, chatId, text) {
+    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    });
+    return r.json();
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
   function clearAll() {
-    document.getElementById('urlInput').value = '';
+    document.getElementById('urlInput').value  = '';
+    document.getElementById('noteInput').value = '';
     document.getElementById('btnTelegram').style.display = 'none';
     lastResults = [];
     document.getElementById('right').innerHTML = `
-      <div class="empty">
-        <div class="icon">&#128269;</div>
-        <p>在左侧贴入 URL，点击「开始检测」</p>
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <p>Paste URLs on the left and run a check</p>
       </div>`;
     document.getElementById('progressWrap').style.display = 'none';
+  }
+
+  function el(tag, cls) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    return e;
+  }
+
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 </script>
 </body>
